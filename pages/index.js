@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import {gql, GraphQLClient} from 'graphql-request'
 import Section from '../components/Section'
+import NavBar from '../components/NavBar'
 
 
 export const getStaticProps = async () => {
@@ -13,7 +14,7 @@ export const getStaticProps = async () => {
     },
   })
 
-  const query = gql`
+  const videosQuery = gql`
     query{
       videos{
         createdAt
@@ -34,18 +35,33 @@ export const getStaticProps = async () => {
       }
     }
   `
-  const data = await graphQLClient.request(query)
+  const accountQuery = gql`
+    query{
+      account(where: {id: "ckzybqre83rma0d15ii2mgqxa"}){
+        username
+        avatar {
+          id
+          url
+        }
+      }
+  }`
+
+  const data = await graphQLClient.request(videosQuery)
   const videos = data.videos
+
+  const accountData = await graphQLClient.request(accountQuery)
+  const account = accountData.account
 
   return {
     props: {
       videos,
+      account,
     },
   }
 }
 
 
-const Home = ({ videos }) => {
+const Home = ({ videos, account }) => {
   const randomVideo = (videos) => {
     return videos[Math.floor(Math.random() * videos.length)]
   }
@@ -58,39 +74,40 @@ const Home = ({ videos }) => {
   }
   return (
     <>
-        <div className="app">
-          <div className="main-video">
-            <Image
-              src={randomVideo(videos).thumbnail.url}
-              alt={randomVideo(videos).thumbnail.title}
-              className="image"
-              layout="fill"
-              priority
-          />
-          </div>
-
-          <div className="video-feed">
-            <Section genre={'Recommended for you'} videos={useSeenVideos(videos)} />
-            { filterVideos(videos, "family").length > 0 &&
-            <Section genre={'Family'} videos={filterVideos(videos, "family")} />
-            }
-            { filterVideos(videos, "classic").length > 0 &&
-              <Section genre={'Classic'} videos={filterVideos(videos, "classic")} />
-            }
-            { filterVideos(videos, "funny").length > 0 &&
-              <Section genre={'Funny'} videos={filterVideos(videos, "funny")} />
-            }
-            { filterVideos(videos, "animals").length > 0 &&
-              <Section genre={'Animals'} videos={filterVideos(videos, "animals")} />
-            }
-            { filterVideos(videos, "thriller").length > 0 &&
-              <Section genre={'Thriller'} videos={filterVideos(videos, "thriller")} />
-            }
-            { filterVideos(videos, "drama").length > 0 &&
-              <Section genre={'Drama'} videos={filterVideos(videos, "drama")} />
-            }
-          </div>
+      <NavBar account={account} />
+      <div className="app">
+        <div className="main-video">
+          <Image
+            src={randomVideo(videos).thumbnail.url}
+            alt={randomVideo(videos).thumbnail.title}
+            className="image"
+            layout="fill"
+            priority
+        />
         </div>
+
+        <div className="video-feed">
+          <Section genre={'Recommended for you'} videos={useSeenVideos(videos)} />
+          { filterVideos(videos, "family").length > 0 &&
+          <Section genre={'Family'} videos={filterVideos(videos, "family")} />
+          }
+          { filterVideos(videos, "classic").length > 0 &&
+            <Section genre={'Classic'} videos={filterVideos(videos, "classic")} />
+          }
+          { filterVideos(videos, "funny").length > 0 &&
+            <Section genre={'Funny'} videos={filterVideos(videos, "funny")} />
+          }
+          { filterVideos(videos, "animals").length > 0 &&
+            <Section genre={'Animals'} videos={filterVideos(videos, "animals")} />
+          }
+          { filterVideos(videos, "thriller").length > 0 &&
+            <Section genre={'Thriller'} videos={filterVideos(videos, "thriller")} />
+          }
+          { filterVideos(videos, "drama").length > 0 &&
+            <Section genre={'Drama'} videos={filterVideos(videos, "drama")} />
+          }
+        </div>
+      </div>
     </>
   )
 }
